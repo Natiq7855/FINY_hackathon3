@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>{% block title %}PeerWeave{% endblock %}</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" />
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet" />
+  <style>
+    :root {
+      --pw-primary: #6366f1;
+      --pw-primary-dark: #4f46e5;
+      --pw-green: #10b981;
+      --pw-bg: #f5f5f7;
+      --pw-surface: #ffffff;
+      --pw-border: #e8e8ed;
+      --pw-text: #1d1d1f;
+      --pw-muted: #6e6e73;
+      --radius: 12px;
+      --radius-sm: 8px;
+    }
+    body {
+      background: var(--pw-bg);
+      font-family: 'Inter', system-ui, sans-serif;
+      color: var(--pw-text);
+      font-size: 0.9375rem;
+    }
+
+    /* Navbar */
+    .navbar {
+      background: rgba(255,255,255,0.92) !important;
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      border-bottom: 1px solid var(--pw-border);
+      padding: 0.55rem 0;
+    }
+    .navbar-brand {
+      font-weight: 700;
+      font-size: 1.15rem;
+      letter-spacing: -0.5px;
+      color: var(--pw-primary) !important;
+    }
+    .navbar-brand span { color: var(--pw-green); }
+    .nav-link {
+      font-size: 0.875rem;
+      font-weight: 500;
+      color: var(--pw-muted) !important;
+      padding: 0.35rem 0.7rem !important;
+      border-radius: var(--radius-sm);
+      transition: color 0.15s, background 0.15s;
+    }
+    .nav-link:hover { color: var(--pw-text) !important; background: #f0f0f5; }
+    .nav-link.active { color: var(--pw-primary) !important; background: #eef2ff; }
+    .nav-link i { margin-right: 0.3rem; font-size: 0.85rem; }
+
+    /* Buttons */
+    .btn { border-radius: var(--radius-sm); font-weight: 500; font-size: 0.875rem; }
+    .btn-pw {
+      background: var(--pw-primary); color: #fff; border: none;
+      box-shadow: 0 1px 4px rgba(99,102,241,.25);
+    }
+    .btn-pw:hover { background: var(--pw-primary-dark); color: #fff; box-shadow: 0 3px 10px rgba(99,102,241,.35); }
+
+    /* Cards */
+    .card {
+      border: 1px solid var(--pw-border);
+      box-shadow: 0 1px 4px rgba(0,0,0,.04);
+      border-radius: var(--radius);
+    }
+    .card-header {
+      background: var(--pw-surface);
+      border-bottom: 1px solid var(--pw-border);
+      border-radius: var(--radius) var(--radius) 0 0 !important;
+      font-weight: 600;
+      font-size: 0.875rem;
+      padding: 0.875rem 1.25rem;
+    }
+    .card-body { padding: 1.25rem; }
+
+    /* Misc */
+    .health-bar .progress-bar { transition: width .8s ease; }
+    .badge { font-weight: 500; border-radius: 6px; }
+    .alert { border-radius: var(--radius-sm); border: none; font-size: 0.875rem; }
+    footer { border-top: 1px solid var(--pw-border); color: var(--pw-muted); font-size: 0.82rem; }
+  </style>
+  {% block extra_head %}{% endblock %}
+</head>
+<body>
+
+<nav class="navbar navbar-expand-lg sticky-top">
+  <div class="container">
+    <a class="navbar-brand" href="/">Peer<span>Weave</span></a>
+    <button class="navbar-toggler border-0 shadow-none" type="button" data-bs-toggle="collapse" data-bs-target="#nav">
+      <span class="navbar-toggler-icon"></span>
+    </button>
+    <div class="collapse navbar-collapse" id="nav">
+      {% if user.is_authenticated %}
+      <ul class="navbar-nav me-auto gap-1">
+        <li class="nav-item">
+          <a class="nav-link {% if request.resolver_match.url_name == 'dashboard' %}active{% endif %}" href="{% url 'dashboard' %}">
+            <i class="bi bi-grid-1x2"></i>Dashboard
+          </a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link {% if 'community' in request.resolver_match.url_name %}active{% endif %}" href="{% url 'community_list' %}">
+            <i class="bi bi-people"></i>Communities
+          </a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link {% if request.resolver_match.url_name == 'match' %}active{% endif %}" href="{% url 'match' %}">
+            <i class="bi bi-intersect"></i>Matchmaking
+          </a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link {% if request.resolver_match.url_name == 'network' %}active{% endif %}" href="{% url 'network' %}">
+            <i class="bi bi-diagram-3"></i>Network
+          </a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link {% if 'chat' in request.resolver_match.url_name %}active{% endif %}" href="{% url 'community_list' %}">
+            <i class="bi bi-chat-dots"></i>Chat
+          </a>
+        </li>
+      </ul>
+      <ul class="navbar-nav ms-auto align-items-center gap-2">
+        <li class="nav-item">
+          <a class="nav-link" href="{% url 'profile' %}">
+            <i class="bi bi-person-circle"></i>{{ user.username }}
+          </a>
+        </li>
+        <li class="nav-item">
+          <form method="post" action="{% url 'logout' %}" class="d-inline">
+            {% csrf_token %}
+            <button type="submit" class="btn btn-sm btn-outline-secondary">Sign out</button>
+          </form>
+        </li>
+      </ul>
+      {% else %}
+      <ul class="navbar-nav ms-auto align-items-center gap-2">
+        <li class="nav-item"><a class="nav-link" href="{% url 'login' %}">Sign in</a></li>
+        <li class="nav-item"><a class="btn btn-pw btn-sm px-4" href="{% url 'signup' %}">Get started</a></li>
+      </ul>
+      {% endif %}
+    </div>
+  </div>
+</nav>
+
+<main class="container py-5">
+  {% for message in messages %}
+  <div class="alert alert-{% if message.tags == 'error' %}danger{% elif message.tags == 'warning' %}warning{% elif message.tags == 'success' %}success{% else %}info{% endif %} alert-dismissible fade show mb-4" role="alert">
+    {{ message }}
+    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+  </div>
+  {% endfor %}
+  {% block content %}{% endblock %}
+</main>
+
+<footer class="py-4 text-center mt-2">
+  <div class="container">PeerWeave &mdash; Building stronger communities, one connection at a time.</div>
+</footer>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+{% block extra_js %}{% endblock %}
+</body>
+</html>

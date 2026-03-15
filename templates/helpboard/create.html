@@ -1,0 +1,42 @@
+{% extends "base.html" %}
+{% block title %}Post Help Request — PeerWeave{% endblock %}
+{% block content %}
+<div class="row justify-content-center">
+  <div class="col-md-7">
+    <div class="card">
+      <div class="card-header">Post a Help Request</div>
+      <div class="card-body p-4">
+        <form method="post" novalidate>
+          {% csrf_token %}
+          <div class="mb-3">
+            <label class="form-label fw-semibold">Community</label>
+            <select name="community" class="form-select" required>
+              <option value="">— select community —</option>
+              {% for membership in memberships %}
+              <option value="{{ membership.community.pk }}"
+                {% if selected_community_id == membership.community.pk|stringformat:"s" %}selected{% endif %}>
+                {{ membership.community.name }}
+              </option>
+              {% endfor %}
+            </select>
+          </div>
+          {% for field in form %}
+          <div class="mb-3">
+            <label class="form-label fw-semibold">{{ field.label }}</label>
+            {{ field }}
+            {% if field.help_text %}
+            <div class="form-text">{{ field.help_text }}</div>
+            {% endif %}
+            {% for error in field.errors %}
+            <div class="text-danger small">{{ error }}</div>
+            {% endfor %}
+          </div>
+          {% endfor %}
+          <button type="submit" class="btn btn-pw me-2">Post Request</button>
+          <a href="{% url 'help_list' %}" class="btn btn-outline-secondary">Cancel</a>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

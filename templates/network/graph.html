@@ -1,0 +1,111 @@
+{% extends "base.html" %}
+{% block title %}Network Graph — PeerWeave{% endblock %}
+
+{% block extra_head %}
+<script src="https://cdn.jsdelivr.net/npm/vis-network@9.1.9/standalone/umd/vis-network.min.js"></script>
+<style>
+  #graph-container {
+    width: 100%;
+    height: 560px;
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    background: #fff;
+  }
+  .legend-dot { display: inline-block; width: 12px; height: 12px; border-radius: 50%; }
+</style>
+{% endblock %}
+
+{% block content %}
+
+<div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
+  <h2 class="fw-bold mb-0">Relationship Network</h2>
+  <form method="get" class="d-flex gap-2">
+    <select name="community" class="form-select form-select-sm" onchange="this.form.submit()">
+      {% for membership in memberships %}
+      <option value="{{ membership.community.pk }}"
+        {% if selected_community and selected_community.pk == membership.community.pk %}selected{% endif %}>
+        {{ membership.community.name }}
+      </option>
+      {% endfor %}
+    </select>
+  </form>
+</div>
+
+{% if selected_community %}
+<!-- Legend -->
+<div class="d-flex flex-wrap gap-3 mb-3 small">
+  <span><span class="legend-dot me-1" style="background:#6366f1;"></span>Match</span>
+  <span><span class="legend-dot me-1" style="background:#10b981;"></span>Buddy</span>
+  <span><span class="legend-dot me-1" style="background:#f59e0b;"></span>Help</span>
+  <span><span class="legend-dot me-1" style="background:#3b82f6;"></span>Chat</span>
+  <span><span class="legend-dot me-1" style="background:#ef4444;"></span>Isolated User</span>
+</div>
+
+<div id="graph-container">
+  <div class="d-flex align-items-center justify-content-center h-100 text-muted">
+    Loading graph…
+  </div>
+</div>
+
+<div class="mt-3 d-flex gap-3 small text-muted">
+  <span><i class="bi bi-info-circle me-1"></i>Drag nodes to rearrange &bull; Scroll to zoom &bull; Click a node to highlight connections</span>
+</div>
+
+<script>
+  const COMMUNITY_ID = {{ selected_community.pk }};
+
+  async function loadGraph() {
+    const res = await fetch(`/network/data/${COMMUNITY_ID}/`);
+    if (!res.ok) { document.getElementById('graph-container').innerHTML = '<div class="p-4 text-danger">Failed to load graph data.</div>'; return; }
+    const data = await res.json();
+
+    const nodes = new vis.DataSet(data.nodes.map(n => ({
+      id: n.id,
+      label: n.label,
+      title: n.title,
+      color: {
+        background: n.isolated ? '#ef4444' : '#6366f1',
+        border: n.isolated ? '#dc2626' : '#4f46e5',
+        highlight: { background: '#f0abfc', border: '#a855f7' }
+      },
+      font: { color: '#1e293b', size: 13 },
+      shape: 'dot',
+      size: n.isolated ? 12 : 16,
+    })));
+
+    const edges = new vis.DataSet(data.edges.map((e, i) => ({
+      id: i,
+      from: e.from,
+      to: e.to,
+      color: { color: e.color, highlight: '#a855f7' },
+      width: e.width || 1,
+      title: e.type,
+      arrows: '',
+      smooth: { type: 'dynamic' },
+    })));
+
+    const container = document.getElementById('graph-container');
+    const options = {
+      physics: {
+        enabled: true,
+        stabilization: { iterations: 150 },
+        barnesHut: { gravitationalConstant: -5000, springLength: 120 },
+      },
+      interaction: {
+        hover: true,
+        tooltipDelay: 200,
+        zoomView: true,
+      },
+    };
+
+    const network = new vis.Network(container, { nodes, edges }, options);
+    network.once('stabilizationIterationsDone', () => { network.setOptions({ physics: false }); });
+  }
+
+  loadGraph();
+</script>
+{% else %}
+<div class="alert alert-info">Join a community to see its relationship network.</div>
+{% endif %}
+
+{% endblock %}

@@ -1,0 +1,80 @@
+{% extends "base.html" %}
+{% block title %}Help Board — PeerWeave{% endblock %}
+{% block content %}
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+  <h2 class="fw-bold mb-0">Help Board</h2>
+  <a href="{% url 'help_create' %}" class="btn btn-pw">
+    <i class="bi bi-plus-circle me-2"></i>Post Help Request
+  </a>
+</div>
+
+<!-- Filters -->
+<form method="get" class="row g-2 mb-4">
+  <div class="col-auto">
+    <select name="community" class="form-select form-select-sm">
+      <option value="">All Communities</option>
+      {% for community in my_communities %}
+      <option value="{{ community.pk }}"
+        {% if selected_community and selected_community.pk == community.pk %}selected{% endif %}>
+        {{ community.name }}
+      </option>
+      {% endfor %}
+    </select>
+  </div>
+  <div class="col-auto">
+    <select name="status" class="form-select form-select-sm">
+      <option value="">All Status</option>
+      <option value="open" {% if status_filter == 'open' %}selected{% endif %}>Open</option>
+      <option value="solved" {% if status_filter == 'solved' %}selected{% endif %}>Solved</option>
+    </select>
+  </div>
+  <div class="col-auto">
+    <button type="submit" class="btn btn-sm btn-outline-secondary">Filter</button>
+  </div>
+</form>
+
+<div class="row g-3">
+  {% for req in requests %}
+  <div class="col-12">
+    <div class="card {% if req.status == 'solved' %}border-success opacity-75{% endif %}">
+      <div class="card-body">
+        <div class="d-flex justify-content-between align-items-start">
+          <div>
+            <h5 class="fw-semibold mb-1">
+              <a href="{% url 'help_detail' req.pk %}" class="text-decoration-none text-dark">
+                {{ req.title }}
+              </a>
+            </h5>
+            <p class="text-muted small mb-2">{{ req.description|truncatechars:120 }}</p>
+            <div>
+              {% for tag in req.tags_list %}
+              <span class="badge bg-warning text-dark me-1">{{ tag }}</span>
+              {% endfor %}
+            </div>
+          </div>
+          <div class="text-end ms-3 flex-shrink-0">
+            <span class="badge {% if req.status == 'open' %}bg-danger{% else %}bg-success{% endif %} mb-1">
+              {{ req.status }}
+            </span>
+            <div class="text-muted small">{{ req.responses.count }} response{{ req.responses.count|pluralize }}</div>
+          </div>
+        </div>
+        <div class="mt-2 text-muted small">
+          <i class="bi bi-person me-1"></i>{{ req.author.username }}
+          &bull; <i class="bi bi-people me-1"></i>{{ req.community.name }}
+          &bull; <i class="bi bi-clock me-1"></i>{{ req.created_at|date:"M d, Y" }}
+        </div>
+      </div>
+    </div>
+  </div>
+  {% empty %}
+  <div class="col-12">
+    <div class="alert alert-info">
+      No help requests found.
+      <a href="{% url 'help_create' %}" class="alert-link">Be the first to post one!</a>
+    </div>
+  </div>
+  {% endfor %}
+</div>
+{% endblock %}

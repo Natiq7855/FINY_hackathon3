@@ -1,0 +1,16 @@
+from django.contrib import admin
+from django.urls import path, include
+from django.views.generic import TemplateView
+
+urlpatterns = [
+    path("admin/", admin.site.urls),
+    path("", TemplateView.as_view(template_name="landing.html"), name="landing"),
+    path("accounts/", include("accounts.urls")),
+    path("communities/", include("communities.urls")),
+    path("match/", include("matchmaking.urls")),
+    path("help/", include("helpboard.urls")),
+    path("network/", include("network.urls")),
+    path("dashboard/", include("accounts.dashboard_urls")),
+    path("chat/", include("chat.urls")),
+    path("ai/", include("ai.urls")),
+]

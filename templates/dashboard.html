@@ -1,0 +1,130 @@
+{% extends "base.html" %}
+{% block title %}Dashboard — PeerWeave{% endblock %}
+{% block content %}
+
+<div class="d-flex align-items-center justify-content-between mb-5">
+  <div>
+    <h2 class="fw-bold mb-0" style="letter-spacing:-0.5px;">Dashboard</h2>
+    <p class="text-muted mb-0 mt-1">Welcome back, <strong>{{ user.username }}</strong></p>
+  </div>
+  <a href="{% url 'community_list' %}" class="btn btn-pw">
+    <i class="bi bi-plus me-2"></i>New Community
+  </a>
+</div>
+
+<!-- Community Health -->
+{% if community_health %}
+<div class="row g-3 mb-5">
+  {% for item in community_health %}
+  <div class="col-md-4">
+    <div class="card h-100">
+      <div class="card-body">
+        <div class="d-flex justify-content-between align-items-start mb-3">
+          <div>
+            <a href="{% url 'community_detail' item.community.pk %}" class="text-decoration-none">
+              <h6 class="fw-semibold mb-0" style="color:var(--pw-text);">{{ item.community.name }}</h6>
+            </a>
+            <small class="text-muted">{{ item.community.member_count }} members</small>
+          </div>
+          <span class="fw-bold fs-5
+            {% if item.score >= 70 %}text-success
+            {% elif item.score >= 40 %}text-warning
+            {% else %}text-danger{% endif %}">{{ item.score }}</span>
+        </div>
+        <div class="progress mb-1" style="height:4px;border-radius:4px;">
+          <div class="progress-bar
+            {% if item.score >= 70 %}bg-success
+            {% elif item.score >= 40 %}bg-warning
+            {% else %}bg-danger{% endif %}"
+            style="width:{{ item.score }}%"></div>
+        </div>
+        <small class="text-muted" style="font-size:0.75rem;">Community health</small>
+      </div>
+    </div>
+  </div>
+  {% endfor %}
+</div>
+{% else %}
+<div class="alert alert-light border mb-5">
+  You haven't joined any communities yet.
+  <a href="{% url 'community_list' %}" class="alert-link">Browse communities</a> or
+  <a href="{% url 'community_create' %}" class="alert-link">create one</a>.
+</div>
+{% endif %}
+
+<div class="row g-4 mb-4">
+  <!-- Matches -->
+  <div class="col-md-6">
+    <div class="card">
+      <div class="card-header d-flex justify-content-between align-items-center">
+        <span><i class="bi bi-intersect me-2 text-primary"></i>Recent Matches</span>
+        <a href="{% url 'match' %}" class="btn btn-sm btn-pw">Find Peer</a>
+      </div>
+      <div class="card-body p-0">
+        {% if recent_matches %}
+        <ul class="list-group list-group-flush">
+          {% for match in recent_matches %}
+          <li class="list-group-item d-flex justify-content-between align-items-center px-4 py-3">
+            <div class="d-flex align-items-center gap-2">
+              <span style="font-size:1.2rem;">👤</span>
+              <div>
+                <div class="fw-semibold" style="font-size:0.875rem;">
+                  {% if match.user_a == user %}{{ match.user_b.username }}{% else %}{{ match.user_a.username }}{% endif %}
+                </div>
+                <div class="text-muted" style="font-size:0.8rem;">{{ match.community.name }}</div>
+              </div>
+            </div>
+            <span class="badge
+              {% if match.status == 'pending' %}bg-warning text-dark
+              {% elif match.status == 'accepted' %}bg-success
+              {% else %}bg-secondary{% endif %}">{{ match.status }}</span>
+          </li>
+          {% endfor %}
+        </ul>
+        {% else %}
+        <div class="p-4 text-muted text-center" style="font-size:0.875rem;">No matches yet.</div>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+
+  <!-- Help Channel -->
+  <div class="col-md-6">
+    <div class="card">
+      <div class="card-header d-flex justify-content-between align-items-center">
+        <span><i class="bi bi-hash me-2 text-warning"></i>Help Channel</span>
+        <span class="text-muted" style="font-size:0.8rem;">Ask in #help</span>
+      </div>
+      <div class="card-body p-0">
+        {% if open_help %}
+        <ul class="list-group list-group-flush">
+          {% for req in open_help %}
+          <li class="list-group-item px-4 py-3">
+            <a href="{% url 'chat_room' req.community.pk 'help' %}" class="text-decoration-none fw-semibold" style="font-size:0.875rem;">
+              {{ req.title|truncatechars:50 }}
+            </a>
+            <div class="text-muted" style="font-size:0.8rem;">{{ req.community.name }} &bull; {{ req.author.username }}</div>
+          </li>
+          {% endfor %}
+        </ul>
+        {% else %}
+        <div class="p-4 text-muted text-center" style="font-size:0.875rem;">No open requests. Ask in <strong>#help</strong>!</div>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Quick Actions -->
+<div class="card">
+  <div class="card-header"><i class="bi bi-lightning me-2 text-warning"></i>Quick Actions</div>
+  <div class="card-body d-flex flex-wrap gap-2">
+    <a href="{% url 'match' %}" class="btn btn-pw"><i class="bi bi-intersect me-2"></i>Find Peer</a>
+    <a href="{% url 'community_list' %}" class="btn btn-outline-primary"><i class="bi bi-chat-dots me-2"></i>Open Chat</a>
+    <a href="{% url 'community_create' %}" class="btn btn-outline-secondary"><i class="bi bi-plus-circle me-2"></i>Create Community</a>
+    <a href="{% url 'network' %}" class="btn btn-outline-secondary"><i class="bi bi-diagram-3 me-2"></i>View Network</a>
+    <a href="{% url 'profile' %}" class="btn btn-outline-secondary"><i class="bi bi-person me-2"></i>Edit Profile</a>
+  </div>
+</div>
+
+{% endblock %}

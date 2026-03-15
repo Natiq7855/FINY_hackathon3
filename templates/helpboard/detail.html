@@ -1,0 +1,112 @@
+{% extends "base.html" %}
+{% block title %}{{ help_req.title }} — PeerWeave{% endblock %}
+{% block content %}
+
+<div class="row g-4">
+  <div class="col-md-8">
+    <!-- Request -->
+    <div class="card mb-4">
+      <div class="card-body p-4">
+        <div class="d-flex justify-content-between align-items-start mb-3">
+          <h3 class="fw-bold mb-0">{{ help_req.title }}</h3>
+          <span class="badge fs-6 {% if help_req.status == 'open' %}bg-danger{% else %}bg-success{% endif %}">
+            {{ help_req.status }}
+          </span>
+        </div>
+        <p class="text-muted mb-3">{{ help_req.description }}</p>
+        <div class="mb-3">
+          {% for tag in help_req.tags_list %}
+          <span class="badge bg-warning text-dark me-1">{{ tag }}</span>
+          {% endfor %}
+        </div>
+        <div class="text-muted small">
+          <i class="bi bi-person me-1"></i>{{ help_req.author.username }}
+          &bull; <i class="bi bi-people me-1"></i>{{ help_req.community.name }}
+          &bull; <i class="bi bi-clock me-1"></i>{{ help_req.created_at|date:"M d, Y H:i" }}
+        </div>
+        {% if user == help_req.author and help_req.status == 'open' %}
+        <form method="post" class="mt-3">
+          {% csrf_token %}
+          <input type="hidden" name="action" value="solve" />
+          <button type="submit" class="btn btn-success btn-sm">
+            <i class="bi bi-check-circle me-2"></i>Mark as Solved
+          </button>
+        </form>
+        {% endif %}
+      </div>
+    </div>
+
+    <!-- Responses -->
+    <h5 class="fw-bold mb-3">{{ responses.count }} Response{{ responses.count|pluralize }}</h5>
+    {% for response in responses %}
+    <div class="card mb-3">
+      <div class="card-body">
+        <div class="d-flex justify-content-between mb-2">
+          <strong><i class="bi bi-person-circle me-2"></i>{{ response.helper.username }}</strong>
+          <small class="text-muted">{{ response.created_at|date:"M d, Y H:i" }}</small>
+        </div>
+        <p class="mb-0">{{ response.message }}</p>
+      </div>
+    </div>
+    {% empty %}
+    <div class="alert alert-light border">No responses yet. Be the first to help!</div>
+    {% endfor %}
+
+    <!-- Post Response Form -->
+    {% if help_req.status == 'open' and user != help_req.author %}
+    <div class="card mt-3">
+      <div class="card-header">Post a Response</div>
+      <div class="card-body p-4">
+        <form method="post" novalidate>
+          {% csrf_token %}
+          <input type="hidden" name="action" value="respond" />
+          {{ form.message }}
+          <button type="submit" class="btn btn-pw mt-3">
+            <i class="bi bi-send me-2"></i>Submit Response
+          </button>
+        </form>
+      </div>
+    </div>
+    {% endif %}
+  </div>
+
+  <!-- Sidebar: Experts -->
+  <div class="col-md-4">
+    <div class="card">
+      <div class="card-header"><i class="bi bi-star me-2"></i>Matching Experts</div>
+      <div class="card-body p-0">
+        {% if experts %}
+        <ul class="list-group list-group-flush">
+          {% for expert in experts %}
+          <li class="list-group-item">
+            <div class="d-flex align-items-center gap-2">
+              <span style="font-size:1.4rem;">👤</span>
+              <div>
+                <strong>{{ expert.username }}</strong>
+                <div class="small text-muted">
+                  {% for skill in expert.profile.skills_list|slice:":4" %}
+                  <span class="badge bg-light text-dark border me-1">{{ skill }}</span>
+                  {% endfor %}
+                </div>
+              </div>
+            </div>
+          </li>
+          {% endfor %}
+        </ul>
+        {% else %}
+        <div class="p-3 text-muted small">No matching experts found. Try adding more tags.</div>
+        {% endif %}
+      </div>
+    </div>
+
+    <div class="card mt-3">
+      <div class="card-header small"><i class="bi bi-arrow-left me-2"></i>Navigation</div>
+      <div class="card-body">
+        <a href="{% url 'help_list' %}" class="btn btn-outline-secondary btn-sm w-100">
+          Back to Help Board
+        </a>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

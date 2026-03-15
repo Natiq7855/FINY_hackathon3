@@ -1,0 +1,111 @@
+{% extends "base.html" %}
+{% block title %}PeerWeave — Build Stronger Communities{% endblock %}
+
+{% block extra_head %}
+<style>
+  .hero { padding: 5rem 0 4rem; }
+  .hero h1 {
+    font-size: clamp(2rem, 5vw, 3rem);
+    font-weight: 700;
+    letter-spacing: -1px;
+    line-height: 1.15;
+  }
+  .hero h1 .grad {
+    background: linear-gradient(135deg, #6366f1, #10b981);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+  .feature-icon {
+    width: 48px; height: 48px;
+    background: #eef2ff;
+    border-radius: 12px;
+    font-size: 1.35rem;
+    display: flex; align-items: center; justify-content: center;
+    margin-bottom: 1rem;
+  }
+  .feature-icon.green { background: #d1fae5; }
+  .cta-section {
+    background: linear-gradient(135deg, #eef2ff 0%, #d1fae5 100%);
+    border-radius: 20px;
+    padding: 3.5rem 2rem;
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+
+<!-- Hero -->
+<section class="hero text-center">
+  <div class="row justify-content-center">
+    <div class="col-lg-7">
+      <h1 class="mb-4">
+        Communities thrive when<br/>
+        <span class="grad">people connect.</span>
+      </h1>
+      <p class="text-muted mb-5" style="font-size:1.05rem; line-height:1.7;">
+        PeerWeave automatically creates peer connections, prevents isolation,
+        and helps your community grow with AI-powered insights.
+      </p>
+      {% if user.is_authenticated %}
+      <a href="{% url 'dashboard' %}" class="btn btn-pw btn-lg px-5 me-2">Go to Dashboard</a>
+      <a href="{% url 'community_list' %}" class="btn btn-outline-secondary btn-lg px-5">Browse Communities</a>
+      {% else %}
+      <a href="{% url 'signup' %}" class="btn btn-pw btn-lg px-5 me-2">Get started free</a>
+      <a href="{% url 'login' %}" class="btn btn-outline-secondary btn-lg px-4">Sign in</a>
+      {% endif %}
+    </div>
+  </div>
+</section>
+
+<!-- Features -->
+<section class="py-4 mb-2">
+  <div class="row g-3">
+    <div class="col-md-4">
+      <div class="card h-100 p-4">
+        <div class="feature-icon">🔗</div>
+        <h6 class="fw-semibold mb-2">Peer Matchmaking</h6>
+        <p class="text-muted small mb-0">Connect members based on shared skills, interests, and timezone for meaningful collaboration.</p>
+      </div>
+    </div>
+    <div class="col-md-4">
+      <div class="card h-100 p-4">
+        <div class="feature-icon green">🤝</div>
+        <h6 class="fw-semibold mb-2">Buddy Onboarding</h6>
+        <p class="text-muted small mb-0">Every new member gets a buddy automatically so no one ever feels lost or alone.</p>
+      </div>
+    </div>
+    <div class="col-md-4">
+      <div class="card h-100 p-4">
+        <div class="feature-icon">🤖</div>
+        <h6 class="fw-semibold mb-2">AI Insights</h6>
+        <p class="text-muted small mb-0">Gemini AI analyzes members, detects challenges, recommends peers, and generates ice-breakers.</p>
+      </div>
+    </div>
+    <div class="col-md-6">
+      <div class="card h-100 p-4">
+        <div class="feature-icon green">🕸️</div>
+        <h6 class="fw-semibold mb-2">Relationship Graph</h6>
+        <p class="text-muted small mb-0">Visualize your community network. Spot isolated members and fix gaps before they grow.</p>
+      </div>
+    </div>
+    <div class="col-md-6">
+      <div class="card h-100 p-4">
+        <div class="feature-icon">📊</div>
+        <h6 class="fw-semibold mb-2">Health Metrics</h6>
+        <p class="text-muted small mb-0">Real-time community health score tracking activity, connectivity, and help resolution.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- CTA -->
+{% if not user.is_authenticated %}
+<section class="cta-section text-center mt-4 mb-2">
+  <h3 class="fw-bold mb-2" style="letter-spacing:-0.5px;">Ready to weave your community?</h3>
+  <p class="text-muted mb-4">Join PeerWeave and start building meaningful connections today.</p>
+  <a href="{% url 'signup' %}" class="btn btn-pw btn-lg px-5">Create free account</a>
+</section>
+{% endif %}
+
+{% endblock %}

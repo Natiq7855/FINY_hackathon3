@@ -1,0 +1,148 @@
+{% extends "base.html" %}
+{% block title %}AI Insights — {{ community.name }}{% endblock %}
+
+{% block content %}
+<div class="d-flex align-items-center justify-content-between mb-4 flex-wrap gap-2">
+  <div>
+    <h2 class="fw-bold mb-1">
+      <i class="bi bi-cpu me-2 text-primary"></i>AI Insights
+    </h2>
+    <p class="text-muted mb-0">{{ community.name }}</p>
+  </div>
+  <a href="{% url 'community_detail' community.pk %}" class="btn btn-outline-secondary">
+    <i class="bi bi-arrow-left me-2"></i>Back to Community
+  </a>
+</div>
+
+{% if health_insights %}
+<!-- ── Community Health Assessment ────────────────────────────────── -->
+<div class="card mb-4">
+  <div class="card-header d-flex align-items-center gap-2">
+    <i class="bi bi-heart-pulse text-danger"></i>
+    <span class="fw-semibold">Community Health Analysis</span>
+    <span class="badge rounded-pill ms-auto
+      {% if health_score >= 70 %}bg-success
+      {% elif health_score >= 40 %}bg-warning text-dark
+      {% else %}bg-danger{% endif %} fs-6 px-3">{{ health_score }}/100</span>
+  </div>
+  <div class="card-body">
+    <p class="mb-3">{{ health_insights.assessment }}</p>
+
+    {% if health_insights.urgent %}
+    <div class="alert alert-danger d-flex align-items-start gap-2 mb-3" role="alert">
+      <i class="bi bi-exclamation-triangle-fill mt-1 flex-shrink-0"></i>
+      <div><strong>Urgent:</strong> {{ health_insights.urgent }}</div>
+    </div>
+    {% endif %}
+
+    <div class="row g-3">
+      {% if health_insights.strengths %}
+      <div class="col-md-4">
+        <h6 class="fw-semibold text-success mb-2"><i class="bi bi-check-circle me-1"></i>Strengths</h6>
+        <ul class="list-unstyled mb-0">
+          {% for s in health_insights.strengths %}
+          <li class="mb-1"><span class="text-success me-1">✓</span>{{ s }}</li>
+          {% endfor %}
+        </ul>
+      </div>
+      {% endif %}
+
+      {% if health_insights.actions %}
+      <div class="col-md-8">
+        <h6 class="fw-semibold mb-2"><i class="bi bi-list-check me-1"></i>Recommended Actions</h6>
+        <div class="d-flex flex-column gap-2">
+          {% for action in health_insights.actions %}
+          <div class="d-flex align-items-start gap-2 p-2 rounded border">
+            <span class="badge mt-1 flex-shrink-0
+              {% if action.priority == 'high' %}bg-danger
+              {% elif action.priority == 'medium' %}bg-warning text-dark
+              {% else %}bg-secondary{% endif %}">
+              {{ action.priority }}
+            </span>
+            <div>
+              <div class="fw-semibold small">{{ action.action }}</div>
+              <div class="text-muted small">{{ action.impact }}</div>
+            </div>
+          </div>
+          {% endfor %}
+        </div>
+      </div>
+      {% endif %}
+    </div>
+  </div>
+</div>
+{% endif %}
+
+
+<!-- ── Member Analysis Table ──────────────────────────────────────── -->
+<div class="card">
+  <div class="card-header d-flex align-items-center gap-2">
+    <i class="bi bi-people text-primary"></i>
+    <span class="fw-semibold">Per-Member Analysis &amp; Peer Recommendations</span>
+    <span class="badge bg-secondary ms-auto">{{ member_analysis|length }} members</span>
+  </div>
+
+  {% if member_analysis %}
+  <div class="card-body p-0">
+    <div class="table-responsive">
+      <table class="table table-hover align-middle mb-0">
+        <thead class="table-light">
+          <tr>
+            <th class="ps-3" style="width:12%">Member</th>
+            <th style="width:22%">Likely Challenge</th>
+            <th style="width:12%">Best Peer Match</th>
+            <th style="width:24%">Why this Peer</th>
+            <th style="width:30%">Ice-breaker Question</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for item in member_analysis %}
+          <tr>
+            <td class="ps-3">
+              <span class="fw-semibold">@{{ item.username }}</span>
+            </td>
+            <td>
+              <span class="text-muted small">{{ item.challenge }}</span>
+            </td>
+            <td>
+              <span class="badge bg-primary">@{{ item.recommended_peer }}</span>
+            </td>
+            <td>
+              <span class="text-muted small">{{ item.reason }}</span>
+            </td>
+            <td>
+              <div class="d-flex align-items-start gap-2">
+                <span class="text-muted small flex-grow-1 question-text" id="q-{{ forloop.counter }}">{{ item.question }}</span>
+                <button class="btn btn-outline-secondary btn-sm flex-shrink-0 copy-btn"
+                        data-target="q-{{ forloop.counter }}" title="Copy question">
+                  <i class="bi bi-clipboard"></i>
+                </button>
+              </div>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+  {% else %}
+  <div class="card-body text-center py-5 text-muted">
+    <i class="bi bi-people display-4 d-block mb-3 opacity-25"></i>
+    <p class="mb-0">Not enough members to analyze (need at least 2).</p>
+  </div>
+  {% endif %}
+</div>
+
+<script>
+document.querySelectorAll(".copy-btn").forEach(btn => {
+  btn.addEventListener("click", () => {
+    const targetId = btn.dataset.target;
+    const text = document.getElementById(targetId).textContent.trim();
+    navigator.clipboard.writeText(text).then(() => {
+      btn.innerHTML = '<i class="bi bi-clipboard-check"></i>';
+      setTimeout(() => { btn.innerHTML = '<i class="bi bi-clipboard"></i>'; }, 2000);
+    });
+  });
+});
+</script>
+{% endblock %}

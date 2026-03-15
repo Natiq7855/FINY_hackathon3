@@ -1,0 +1,1162 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>#general — {{ community.name }} | PeerWeave</title>
+<link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet" />
+<style>
+/* ═══════════════════════════════════════════════
+   DISCORD-STYLE VARIABLES
+═══════════════════════════════════════════════ */
+:root {
+  --bg-primary:       #313338;
+  --bg-secondary:     #2b2d31;
+  --bg-tertiary:      #1e1f22;
+  --bg-secondary-alt: #232428;
+  --bg-modifier-hover: rgba(255,255,255,.06);
+  --bg-modifier-active: rgba(255,255,255,.1);
+  --bg-modifier-selected: rgba(255,255,255,.08);
+  --bg-floating:      #111214;
+
+  --text-normal:    #dbdee1;
+  --text-muted:     #949ba4;
+  --text-link:      #00a8fc;
+  --header-primary: #f2f3f5;
+  --header-secondary: #b5bac1;
+  --interactive-normal: #b5bac1;
+  --interactive-hover:  #dbdee1;
+  --interactive-active: #ffffff;
+
+  --brand:        #5865f2;
+  --brand-hover:  #4752c4;
+  --green:        #23a559;
+  --green-dim:    #1a7f42;
+  --red:          #da373c;
+  --yellow:       #f0b132;
+
+  --divider:      rgba(255,255,255,.06);
+  --input-bg:     #383a40;
+  --input-border: rgba(0,0,0,.3);
+
+  --scrollbar-track: rgba(0,0,0,.2);
+  --scrollbar-thumb: rgba(0,0,0,.4);
+
+  --radius-sm: 4px;
+  --radius-md: 8px;
+  --radius-lg: 16px;
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html, body { height: 100%; overflow: hidden; }
+body {
+  font-family: 'gg sans', 'Noto Sans', 'Helvetica Neue', Helvetica, Arial, sans-serif;
+  background: var(--bg-primary);
+  color: var(--text-normal);
+  font-size: 16px;
+  line-height: 1.375;
+}
+a { color: var(--text-link); text-decoration: none; }
+a:hover { text-decoration: underline; }
+
+/* Scrollbars */
+::-webkit-scrollbar { width: 8px; }
+::-webkit-scrollbar-track { background: var(--scrollbar-track); border-radius: 4px; }
+::-webkit-scrollbar-thumb { background: var(--scrollbar-thumb); border-radius: 4px; }
+::-webkit-scrollbar-thumb:hover { background: rgba(0,0,0,.6); }
+
+/* ═══════════════════════════════════════════════
+   APP SHELL
+═══════════════════════════════════════════════ */
+.app {
+  display: grid;
+  grid-template-columns: 72px 240px 1fr 240px;
+  grid-template-rows: 100vh;
+  height: 100vh;
+}
+
+/* ═══════════════════════════════════════════════
+   SERVER SIDEBAR (leftmost 72px)
+═══════════════════════════════════════════════ */
+.server-list {
+  background: var(--bg-tertiary);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 12px 0;
+  gap: 8px;
+  overflow-y: auto;
+  overflow-x: hidden;
+}
+.server-list::-webkit-scrollbar { width: 0; }
+
+.server-pill {
+  position: absolute;
+  left: 0;
+  width: 4px;
+  border-radius: 0 4px 4px 0;
+  background: var(--interactive-active);
+  transition: height .15s ease, opacity .15s ease;
+  opacity: 0;
+  height: 8px;
+  top: 50%;
+  transform: translateY(-50%);
+}
+.server-item {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+.server-item:hover .server-pill,
+.server-item.active .server-pill { opacity: 1; height: 20px; }
+.server-item.active .server-pill { height: 40px; }
+
+.server-icon {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  background: var(--bg-primary);
+  color: var(--text-normal);
+  font-size: .8rem;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: border-radius .15s ease, background .15s ease, color .15s ease;
+  text-transform: uppercase;
+  line-height: 1;
+  text-align: center;
+  overflow: hidden;
+  position: relative;
+  z-index: 1;
+  text-decoration: none;
+  flex-shrink: 0;
+}
+.server-icon:hover, .server-item.active .server-icon {
+  border-radius: var(--radius-md);
+  background: var(--brand);
+  color: #fff;
+  text-decoration: none;
+}
+.server-item.active .server-icon { background: var(--brand); color: #fff; border-radius: var(--radius-md); }
+
+.server-divider {
+  width: 32px;
+  height: 2px;
+  background: var(--divider);
+  border-radius: 1px;
+  flex-shrink: 0;
+}
+
+.server-tooltip {
+  display: none;
+  position: absolute;
+  left: 64px;
+  background: var(--bg-floating);
+  color: var(--header-primary);
+  font-size: .875rem;
+  font-weight: 600;
+  padding: 8px 12px;
+  border-radius: var(--radius-sm);
+  white-space: nowrap;
+  z-index: 999;
+  pointer-events: none;
+}
+.server-item:hover .server-tooltip { display: block; }
+
+/* ═══════════════════════════════════════════════
+   CHANNEL SIDEBAR (240px)
+═══════════════════════════════════════════════ */
+.channel-sidebar {
+  background: var(--bg-secondary);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.guild-header {
+  height: 48px;
+  padding: 0 16px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-bottom: 1px solid var(--divider);
+  font-weight: 600;
+  font-size: .9375rem;
+  color: var(--header-primary);
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: background .1s;
+}
+.guild-header:hover { background: var(--bg-modifier-hover); }
+.guild-header i { color: var(--interactive-normal); font-size: 1.1rem; }
+
+.channels-scroll {
+  flex: 1;
+  overflow-y: auto;
+  padding: 8px 0 16px;
+}
+
+.channel-category {
+  padding: 16px 8px 4px 8px;
+  font-size: .6875rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: .02em;
+  color: var(--text-muted);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+.channel-category:hover { color: var(--interactive-hover); }
+
+.channel-item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 1px 8px;
+  margin: 0 8px;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  color: var(--interactive-normal);
+  font-size: .9375rem;
+  min-height: 34px;
+  font-weight: 500;
+  text-decoration: none;
+  transition: background .06s, color .06s;
+}
+.channel-item:hover {
+  background: var(--bg-modifier-hover);
+  color: var(--interactive-hover);
+  text-decoration: none;
+}
+.channel-item.active {
+  background: var(--bg-modifier-selected);
+  color: var(--interactive-active);
+}
+.channel-item i {
+  font-size: 1.1rem;
+  flex-shrink: 0;
+  color: var(--text-muted);
+}
+.channel-item.active i,
+.channel-item:hover i { color: var(--interactive-hover); }
+.channel-item .unread-badge {
+  margin-left: auto;
+  background: var(--red);
+  color: #fff;
+  font-size: .65rem;
+  font-weight: 700;
+  min-width: 16px;
+  height: 16px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 4px;
+}
+.channel-item .dot {
+  margin-left: auto;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--interactive-active);
+}
+
+/* User panel at bottom */
+.user-panel {
+  background: var(--bg-secondary-alt);
+  padding: 8px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+}
+.user-panel .user-avatar {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: var(--brand);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: .75rem;
+  font-weight: 700;
+  color: #fff;
+  text-transform: uppercase;
+  flex-shrink: 0;
+  position: relative;
+}
+.user-panel .user-avatar::after {
+  content: '';
+  position: absolute;
+  bottom: -1px;
+  right: -1px;
+  width: 11px;
+  height: 11px;
+  border-radius: 50%;
+  background: var(--green);
+  border: 2px solid var(--bg-secondary-alt);
+}
+.user-panel .user-info { flex: 1; overflow: hidden; min-width: 0; }
+.user-panel .user-name {
+  font-size: .875rem;
+  font-weight: 600;
+  color: var(--header-primary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.user-panel .user-tag {
+  font-size: .75rem;
+  color: var(--text-muted);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.user-panel .panel-icons {
+  display: flex;
+  gap: 2px;
+}
+.panel-icon-btn {
+  width: 32px;
+  height: 32px;
+  border-radius: var(--radius-sm);
+  border: none;
+  background: transparent;
+  color: var(--interactive-normal);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1rem;
+  transition: background .1s, color .1s;
+  text-decoration: none;
+}
+.panel-icon-btn:hover {
+  background: var(--bg-modifier-hover);
+  color: var(--interactive-hover);
+  text-decoration: none;
+}
+
+/* ═══════════════════════════════════════════════
+   MAIN CHAT AREA
+═══════════════════════════════════════════════ */
+.chat-main {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  background: var(--bg-primary);
+}
+
+/* Channel header */
+.channel-header {
+  height: 48px;
+  padding: 0 16px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  border-bottom: 1px solid var(--divider);
+  flex-shrink: 0;
+  background: var(--bg-primary);
+  z-index: 10;
+}
+.channel-header .ch-name {
+  font-weight: 700;
+  font-size: .9375rem;
+  color: var(--header-primary);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.channel-header .ch-name i { color: var(--text-muted); font-size: 1.15rem; }
+.channel-header .ch-divider {
+  width: 1px;
+  height: 24px;
+  background: var(--divider);
+}
+.channel-header .ch-topic {
+  font-size: .875rem;
+  color: var(--text-muted);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.header-icons {
+  margin-left: auto;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+.header-icon-btn {
+  width: 36px;
+  height: 36px;
+  border-radius: var(--radius-sm);
+  border: none;
+  background: transparent;
+  color: var(--interactive-normal);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.1rem;
+  transition: background .1s, color .1s;
+  text-decoration: none;
+}
+.header-icon-btn:hover {
+  background: var(--bg-modifier-hover);
+  color: var(--interactive-hover);
+  text-decoration: none;
+}
+
+/* Messages feed */
+.messages-feed {
+  flex: 1;
+  overflow-y: scroll;
+  padding: 16px 0 24px;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Date divider */
+.date-divider {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 20px 16px 8px;
+  font-size: .75rem;
+  font-weight: 600;
+  color: var(--text-muted);
+  white-space: nowrap;
+}
+.date-divider::before, .date-divider::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: var(--divider);
+}
+.date-divider::before { min-width: 32px; }
+
+/* Message group */
+.msg-group {
+  display: flex;
+  flex-direction: column;
+  padding: 2px 16px;
+  position: relative;
+}
+.msg-group:hover { background: rgba(0,0,0,.06); }
+
+.msg-first {
+  display: flex;
+  gap: 16px;
+  padding-top: 16px;
+}
+.msg-continued {
+  display: flex;
+  gap: 16px;
+  padding: 1px 0;
+}
+
+/* Avatar */
+.msg-avatar {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: .875rem;
+  font-weight: 700;
+  color: #fff;
+  text-transform: uppercase;
+  cursor: pointer;
+  align-self: flex-start;
+}
+.msg-avatar-spacer {
+  width: 40px;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+}
+.msg-timestamp-inline {
+  font-size: .6875rem;
+  color: var(--text-muted);
+  opacity: 0;
+  line-height: 1.5;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+  margin-right: 2px;
+  margin-top: 4px;
+}
+.msg-group:hover .msg-timestamp-inline { opacity: 1; }
+
+.msg-content-wrap { flex: 1; min-width: 0; }
+.msg-header { display: flex; align-items: baseline; gap: 8px; margin-bottom: 2px; }
+.msg-author {
+  font-weight: 600;
+  font-size: .9375rem;
+  cursor: pointer;
+}
+.msg-author:hover { text-decoration: underline; }
+.msg-timestamp {
+  font-size: .75rem;
+  color: var(--text-muted);
+  font-variant-numeric: tabular-nums;
+}
+.msg-text {
+  font-size: .9375rem;
+  color: var(--text-normal);
+  line-height: 1.375;
+  word-break: break-word;
+  white-space: pre-wrap;
+}
+
+/* Empty state */
+.welcome-screen {
+  padding: 32px 16px 16px;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+}
+.welcome-icon {
+  width: 68px;
+  height: 68px;
+  border-radius: 50%;
+  background: var(--bg-secondary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 2rem;
+  margin-bottom: 16px;
+}
+.welcome-title {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: var(--header-primary);
+  margin-bottom: 8px;
+}
+.welcome-text {
+  font-size: .9375rem;
+  color: var(--text-muted);
+}
+
+/* Input area */
+.chat-input-area {
+  padding: 0 16px 24px;
+  flex-shrink: 0;
+}
+.input-box {
+  background: var(--input-bg);
+  border-radius: var(--radius-md);
+  display: flex;
+  align-items: flex-end;
+  gap: 0;
+  position: relative;
+}
+.input-add-btn {
+  width: 44px;
+  height: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--interactive-normal);
+  cursor: pointer;
+  flex-shrink: 0;
+  font-size: 1.25rem;
+  border: none;
+  background: transparent;
+  border-radius: var(--radius-md) 0 0 var(--radius-md);
+  transition: color .1s;
+}
+.input-add-btn:hover { color: var(--interactive-hover); }
+
+.chat-textarea {
+  flex: 1;
+  background: transparent;
+  border: none;
+  outline: none;
+  color: var(--text-normal);
+  font-size: .9375rem;
+  font-family: inherit;
+  line-height: 1.375;
+  resize: none;
+  padding: 11px 0;
+  max-height: 200px;
+  overflow-y: auto;
+  caret-color: var(--text-normal);
+}
+.chat-textarea::placeholder { color: var(--text-muted); }
+.chat-textarea::-webkit-scrollbar { width: 0; }
+
+.input-icons {
+  display: flex;
+  align-items: center;
+  padding: 0 8px;
+  gap: 2px;
+  flex-shrink: 0;
+}
+.input-icon-btn {
+  width: 36px;
+  height: 36px;
+  border-radius: var(--radius-sm);
+  border: none;
+  background: transparent;
+  color: var(--interactive-normal);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.15rem;
+  transition: color .1s, background .1s;
+}
+.input-icon-btn:hover { color: var(--interactive-hover); background: var(--bg-modifier-hover); }
+.input-icon-btn.send { color: var(--brand); }
+.input-icon-btn.send:hover { color: #fff; background: var(--brand); }
+.input-icon-btn.send:disabled { color: var(--text-muted); background: transparent; cursor: not-allowed; }
+
+/* ═══════════════════════════════════════════════
+   MEMBERS SIDEBAR (240px)
+═══════════════════════════════════════════════ */
+.members-sidebar {
+  background: var(--bg-secondary);
+  overflow-y: auto;
+  padding: 16px 0;
+}
+.members-sidebar::-webkit-scrollbar { width: 0; }
+.members-sidebar:hover::-webkit-scrollbar { width: 8px; }
+
+.members-category {
+  padding: 16px 8px 4px 16px;
+  font-size: .6875rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: .02em;
+  color: var(--text-muted);
+}
+
+.member-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 6px 8px 6px 16px;
+  border-radius: var(--radius-sm);
+  margin: 0 8px;
+  cursor: pointer;
+  color: var(--text-muted);
+  font-size: .9375rem;
+  transition: background .06s, color .06s;
+}
+.member-row:hover {
+  background: var(--bg-modifier-hover);
+  color: var(--interactive-hover);
+}
+.member-avatar {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: .75rem;
+  font-weight: 700;
+  color: #fff;
+  text-transform: uppercase;
+  flex-shrink: 0;
+  position: relative;
+}
+.member-avatar .status-dot {
+  position: absolute;
+  bottom: -1px;
+  right: -1px;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: var(--green);
+  border: 2px solid var(--bg-secondary);
+}
+.member-info { min-width: 0; }
+.member-name {
+  font-size: .875rem;
+  font-weight: 600;
+  color: var(--interactive-normal);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.member-row:hover .member-name { color: var(--interactive-hover); }
+.member-you-badge {
+  font-size: .65rem;
+  color: var(--text-muted);
+  margin-left: 4px;
+}
+.member-tag {
+  font-size: .75rem;
+  color: var(--text-muted);
+}
+
+/* Responsive: hide members on small screens */
+@media (max-width: 1024px) {
+  .app { grid-template-columns: 72px 240px 1fr; }
+  .members-sidebar { display: none; }
+}
+@media (max-width: 640px) {
+  .app { grid-template-columns: 0 0 1fr; }
+  .server-list, .channel-sidebar { display: none; }
+}
+</style>
+</head>
+<body>
+<div class="app">
+
+  <!-- ── SERVER LIST ──────────────────────────────── -->
+  <nav class="server-list" aria-label="Servers">
+
+    <!-- Home -->
+    <div class="server-item">
+      <div class="server-pill"></div>
+      <a href="{% url 'dashboard' %}" class="server-icon" title="Dashboard" style="background:var(--brand);">
+        <i class="bi bi-house-fill" style="font-size:1.2rem;"></i>
+      </a>
+      <div class="server-tooltip">Dashboard</div>
+    </div>
+
+    <div class="server-divider"></div>
+
+    <!-- Communities as server icons -->
+    {% for m in user_communities %}
+    <div class="server-item {% if m.community.pk == community.pk %}active{% endif %}">
+      <div class="server-pill"></div>
+      <a href="{% url 'chat_room' m.community.pk 'general' %}" class="server-icon"
+         title="{{ m.community.name }}"
+         style="{% if m.community.pk == community.pk %}background:var(--brand);border-radius:var(--radius-md);{% endif %}">
+        {{ m.community.name|slice:":2"|upper }}
+      </a>
+      <div class="server-tooltip">{{ m.community.name }}</div>
+    </div>
+    {% endfor %}
+
+    <div class="server-divider"></div>
+
+    <!-- Add community -->
+    <div class="server-item">
+      <div class="server-pill"></div>
+      <a href="{% url 'community_create' %}" class="server-icon" title="Create Community" style="color:var(--green);">
+        <i class="bi bi-plus-lg" style="font-size:1.3rem;"></i>
+      </a>
+      <div class="server-tooltip">Create Community</div>
+    </div>
+
+  </nav>
+
+  <!-- ── CHANNEL SIDEBAR ─────────────────────────── -->
+  <aside class="channel-sidebar">
+
+    <div class="guild-header">
+      <span>{{ community.name }}</span>
+      <i class="bi bi-chevron-down"></i>
+    </div>
+
+    <div class="channels-scroll">
+
+      <div class="channel-category">
+        <i class="bi bi-chevron-down" style="font-size:.6rem;"></i>
+        Text Channels
+      </div>
+
+      <!-- Text channels: general + help -->
+      {% for ch_slug, ch_label in channels %}
+      <a href="{% url 'chat_room' community.pk ch_slug %}"
+         class="channel-item {% if ch_slug == channel %}active{% endif %}">
+        <i class="bi bi-hash"></i>
+        {{ ch_slug }}
+        {% if ch_slug != channel %}
+          {% with cnt=unread_counts|dictsort:'0' %}
+          {% endwith %}
+        {% endif %}
+      </a>
+      {% endfor %}
+
+      <div class="channel-category" style="margin-top:8px;">
+        <i class="bi bi-chevron-down" style="font-size:.6rem;"></i>
+        Navigation
+      </div>
+
+      <a href="{% url 'community_detail' community.pk %}" class="channel-item">
+        <i class="bi bi-people"></i>
+        members
+      </a>
+      <a href="{% url 'match' %}?community={{ community.pk }}" class="channel-item">
+        <i class="bi bi-intersect"></i>
+        matchmaking
+      </a>
+      <a href="{% url 'network' %}?community={{ community.pk }}" class="channel-item">
+        <i class="bi bi-diagram-3"></i>
+        network-graph
+      </a>
+
+    </div>
+
+    <!-- User Panel -->
+    <div class="user-panel">
+      <div class="user-avatar">{{ user.username|slice:":2"|upper }}</div>
+      <div class="user-info">
+        <div class="user-name">{{ user.get_full_name|default:user.username }}</div>
+        <div class="user-tag">@{{ user.username }}</div>
+      </div>
+      <div class="panel-icons">
+        <a href="{% url 'profile' %}" class="panel-icon-btn" title="Edit Profile">
+          <i class="bi bi-gear"></i>
+        </a>
+        <form method="post" action="{% url 'logout' %}" style="display:contents;">
+          {% csrf_token %}
+          <button type="submit" class="panel-icon-btn" title="Logout">
+            <i class="bi bi-box-arrow-right"></i>
+          </button>
+        </form>
+      </div>
+    </div>
+
+  </aside>
+
+  <!-- ── MAIN CHAT ────────────────────────────────── -->
+  <main class="chat-main">
+
+    <!-- Channel Header -->
+    <div class="channel-header">
+      <div class="ch-name">
+        <i class="bi bi-hash"></i>
+        {{ channel_meta.label }}
+      </div>
+      <div class="ch-divider"></div>
+      <div class="ch-topic">{{ channel_meta.topic|truncatechars:80 }}</div>
+      <div class="header-icons">
+        <a href="{% url 'match' %}?community={{ community.pk }}" class="header-icon-btn" title="Matchmaking">
+          <i class="bi bi-intersect"></i>
+        </a>
+        <a href="{% url 'network' %}?community={{ community.pk }}" class="header-icon-btn" title="Network Graph">
+          <i class="bi bi-diagram-3"></i>
+        </a>
+        <a href="{% url 'community_detail' community.pk %}" class="header-icon-btn" title="Community Detail">
+          <i class="bi bi-people"></i>
+        </a>
+      </div>
+    </div>
+
+    <!-- Messages Feed -->
+    <div class="messages-feed" id="chatFeed">
+
+      {% if not initial_messages %}
+      <div class="welcome-screen">
+        <div class="welcome-icon">#️⃣</div>
+        <div class="welcome-title">Welcome to #{{ channel_meta.label }}!</div>
+        <div class="welcome-text">{{ channel_meta.topic }}</div>
+      </div>
+      {% else %}
+      <!-- Server-rendered initial messages (grouped by sender) -->
+      {% for msg in initial_messages %}
+        {% if forloop.first %}
+          {# Always show full header for first message #}
+          <div class="date-divider">{{ msg.created_at|date:"F j, Y" }}</div>
+          <div class="msg-group" data-sender="{{ msg.sender.username }}">
+            <div class="msg-first">
+              <div class="msg-avatar" style="background:{{ msg.sender.username|length|divisibleby:2|yesno:'#5865f2,#57f287' }};">
+                {{ msg.sender.username|slice:":2"|upper }}
+              </div>
+              <div class="msg-content-wrap">
+                <div class="msg-header">
+                  <span class="msg-author" style="color:{{ msg.sender.username|length|divisibleby:3|yesno:'#f47fff,#57f287' }};">
+                    {{ msg.sender.get_full_name|default:msg.sender.username }}
+                  </span>
+                  <span class="msg-timestamp">{{ msg.created_at|date:"d/m/Y" }} {{ msg.created_at|time:"H:i" }}</span>
+                </div>
+                <div class="msg-text" data-msg-id="{{ msg.id }}">{{ msg.content }}</div>
+              </div>
+            </div>
+        {% else %}
+          {# Check if same sender as previous — we'll just show all with headers for simplicity #}
+          </div><!-- close previous msg-group -->
+          <div class="msg-group" data-sender="{{ msg.sender.username }}">
+            <div class="msg-first">
+              <div class="msg-avatar" style="background:{{ msg.sender.username|length|divisibleby:2|yesno:'#5865f2,#57f287' }};">
+                {{ msg.sender.username|slice:":2"|upper }}
+              </div>
+              <div class="msg-content-wrap">
+                <div class="msg-header">
+                  <span class="msg-author" style="color:{{ msg.sender.username|length|divisibleby:3|yesno:'#f47fff,#57f287' }};">
+                    {{ msg.sender.get_full_name|default:msg.sender.username }}
+                  </span>
+                  <span class="msg-timestamp">{{ msg.created_at|date:"d/m/Y" }} {{ msg.created_at|time:"H:i" }}</span>
+                </div>
+                <div class="msg-text" data-msg-id="{{ msg.id }}">{{ msg.content }}</div>
+              </div>
+            </div>
+        {% endif %}
+        {% if forloop.last %}</div>{% endif %}
+      {% endfor %}
+      {% endif %}
+
+    </div><!-- /messages-feed -->
+
+    <!-- Chat Input -->
+    <div class="chat-input-area">
+      <div class="input-box">
+        <button class="input-add-btn" title="Attach file" disabled>
+          <i class="bi bi-plus-circle"></i>
+        </button>
+        <textarea
+          id="chatInput"
+          class="chat-textarea"
+          placeholder="Message #{{ channel_meta.label }}"
+          rows="1"
+          maxlength="2000"
+        ></textarea>
+        <div class="input-icons">
+          <button class="input-icon-btn" title="Emoji" disabled>
+            <i class="bi bi-emoji-smile"></i>
+          </button>
+          <button class="input-icon-btn send" id="sendBtn" disabled title="Send Message (Enter)">
+            <i class="bi bi-send-fill"></i>
+          </button>
+        </div>
+      </div>
+    </div>
+
+  </main>
+
+  <!-- ── MEMBERS SIDEBAR ─────────────────────────── -->
+  <aside class="members-sidebar">
+
+    <div class="members-category">Members — {{ members.count }}</div>
+
+    {% for membership in members %}
+    <div class="member-row">
+      <div class="member-avatar" style="background: hsl({{ membership.user.username|length }}00, 60%, 45%);">
+        {{ membership.user.username|slice:":2"|upper }}
+        <div class="status-dot"></div>
+      </div>
+      <div class="member-info">
+        <div class="member-name">
+          {{ membership.user.get_full_name|default:membership.user.username }}
+          {% if membership.user == user %}<span class="member-you-badge">(you)</span>{% endif %}
+        </div>
+        <div class="member-tag">@{{ membership.user.username }}</div>
+      </div>
+    </div>
+    {% endfor %}
+
+  </aside>
+
+</div><!-- /app -->
+
+<script>
+(function () {
+  /* ── Config ──────────────────────────────────────── */
+  const COMMUNITY_ID = {{ community.pk }};
+  const SEND_URL     = "{% url 'chat_send' community.pk channel %}";
+  const POLL_URL     = "{% url 'chat_messages_api' community.pk channel %}";
+  const CSRF         = "{{ csrf_token }}";
+  const ME_USERNAME  = "{{ user.username }}";
+
+  const feed    = document.getElementById("chatFeed");
+  const input   = document.getElementById("chatInput");
+  const sendBtn = document.getElementById("sendBtn");
+
+  /* ── Seed last message id from server-rendered messages ── */
+  let lastId = 0;
+  feed.querySelectorAll("[data-msg-id]").forEach(el => {
+    const id = parseInt(el.dataset.msgId, 10);
+    if (id > lastId) lastId = id;
+  });
+
+  /* ── Username colour (deterministic from name hash) ── */
+  const PALETTE = [
+    '#f47fff','#57f287','#fee75c','#5865f2','#eb459e',
+    '#00b0f4','#faa61a','#1abc9c','#e74c3c','#9b59b6',
+  ];
+  function usernameColor(name) {
+    let h = 0;
+    for (let i = 0; i < name.length; i++) h = name.charCodeAt(i) + ((h << 5) - h);
+    return PALETTE[Math.abs(h) % PALETTE.length];
+  }
+  function avatarBg(name) {
+    let h = 0;
+    for (let i = 0; i < name.length; i++) h = name.charCodeAt(i) + ((h << 5) - h);
+    return `hsl(${Math.abs(h) % 360}, 60%, 45%)`;
+  }
+
+  /* ── Apply consistent colours to server-rendered messages ── */
+  document.querySelectorAll(".msg-author").forEach(el => {
+    const authorEl = el.closest(".msg-content-wrap");
+    const senderEl = el.closest(".msg-group");
+    el.style.color = usernameColor(senderEl?.dataset?.sender || el.textContent);
+  });
+  document.querySelectorAll(".msg-avatar").forEach(el => {
+    const group = el.closest(".msg-group");
+    if (group) el.style.background = avatarBg(group.dataset.sender || "");
+  });
+  document.querySelectorAll(".member-avatar").forEach(el => {
+    const name = el.closest(".member-row")?.querySelector(".member-tag")?.textContent?.replace("@","") || "";
+    el.style.background = avatarBg(name);
+  });
+  document.querySelector(".user-panel .user-avatar").style.background = avatarBg(ME_USERNAME);
+
+  /* ── Scroll helpers ──────────────────────────────── */
+  function atBottom() {
+    return feed.scrollHeight - feed.scrollTop - feed.clientHeight < 100;
+  }
+  function scrollBottom(force) {
+    if (force || atBottom()) feed.scrollTop = feed.scrollHeight;
+  }
+  scrollBottom(true);
+
+  /* ── Render a message from API data ─────────────── */
+  let prevSender = null;
+  let prevGroupEl = null;
+  let prevDate   = null;
+
+  // Seed prev state from server-rendered content
+  const lastGroup = feed.querySelector(".msg-group:last-of-type");
+  if (lastGroup) {
+    prevSender = lastGroup.dataset.sender;
+    prevGroupEl = lastGroup;
+  }
+
+  function renderMsg(msg) {
+    // Remove welcome screen if present
+    const welcome = feed.querySelector(".welcome-screen");
+    if (welcome) welcome.remove();
+
+    const shouldScroll = atBottom();
+
+    // Date divider
+    if (msg.date !== prevDate) {
+      prevDate = msg.date;
+      const div = document.createElement("div");
+      div.className = "date-divider";
+      div.textContent = msg.date;
+      feed.appendChild(div);
+      prevSender = null; // force new header after date break
+    }
+
+    const isContinued = prevSender === msg.sender && prevGroupEl;
+
+    if (isContinued) {
+      // Append to existing group
+      const textEl = document.createElement("div");
+      textEl.className = "msg-continued";
+      textEl.innerHTML = `
+        <div class="msg-avatar-spacer">
+          <span class="msg-timestamp-inline">${esc(msg.time)}</span>
+        </div>
+        <div class="msg-content-wrap">
+          <div class="msg-text" data-msg-id="${msg.id}">${esc(msg.content)}</div>
+        </div>`;
+      prevGroupEl.appendChild(textEl);
+      if (msg.id > lastId) lastId = msg.id;
+    } else {
+      // New group
+      const group = document.createElement("div");
+      group.className = "msg-group";
+      group.dataset.sender = msg.sender;
+      const color = usernameColor(msg.sender);
+      const bg    = avatarBg(msg.sender);
+      const initials = msg.sender.slice(0, 2).toUpperCase();
+      group.innerHTML = `
+        <div class="msg-first">
+          <div class="msg-avatar" style="background:${bg};">${initials}</div>
+          <div class="msg-content-wrap">
+            <div class="msg-header">
+              <span class="msg-author" style="color:${color};">${esc(msg.sender_display)}</span>
+              <span class="msg-timestamp">${esc(msg.date)} ${esc(msg.time)}</span>
+            </div>
+            <div class="msg-text" data-msg-id="${msg.id}">${esc(msg.content)}</div>
+          </div>
+        </div>`;
+      feed.appendChild(group);
+      prevSender  = msg.sender;
+      prevGroupEl = group;
+      if (msg.id > lastId) lastId = msg.id;
+    }
+
+    scrollBottom(shouldScroll);
+  }
+
+  function esc(str) {
+    return String(str)
+      .replace(/&/g,"&amp;").replace(/</g,"&lt;")
+      .replace(/>/g,"&gt;").replace(/"/g,"&quot;");
+  }
+
+  /* ── Send ────────────────────────────────────────── */
+  async function doSend() {
+    const text = input.value.trim();
+    if (!text || sendBtn.disabled) return;
+
+    sendBtn.disabled = true;
+    input.disabled   = true;
+
+    try {
+      const res = await fetch(SEND_URL, {
+        method: "POST",
+        headers: {
+          "X-CSRFToken": CSRF,
+          "Content-Type": "application/x-www-form-urlencoded",
+        },
+        body: `content=${encodeURIComponent(text)}`,
+      });
+      if (res.ok) {
+        const msg = await res.json();
+        renderMsg(msg);
+        input.value = "";
+        autoResize();
+      }
+    } catch { /* silent */ }
+    finally {
+      input.disabled = false;
+      sendBtn.disabled = input.value.trim() === "";
+      input.focus();
+    }
+  }
+
+  /* ── Poll ────────────────────────────────────────── */
+  let active = true;
+  async function poll() {
+    if (!active) return;
+    try {
+      const res = await fetch(`${POLL_URL}?after=${lastId}`);
+      if (res.ok) {
+        const { messages } = await res.json();
+        messages.forEach(renderMsg);
+      }
+    } catch { /* silent */ }
+    setTimeout(poll, 2500);
+  }
+  setTimeout(poll, 2500);
+  document.addEventListener("visibilitychange", () => {
+    active = !document.hidden;
+    if (active) setTimeout(poll, 100);
+  });
+
+  /* ── Input helpers ───────────────────────────────── */
+  function autoResize() {
+    input.style.height = "auto";
+    input.style.height = Math.min(input.scrollHeight, 200) + "px";
+  }
+  input.addEventListener("input", () => {
+    sendBtn.disabled = input.value.trim() === "";
+    autoResize();
+  });
+  input.addEventListener("keydown", e => {
+    if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); doSend(); }
+  });
+  sendBtn.addEventListener("click", doSend);
+  input.focus();
+})();
+</script>
+</body>
+</html>
