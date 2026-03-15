@@ -1,5 +1,6 @@
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
+from django.views.decorators.http import require_POST
 from django.contrib import messages
 from .models import Community, Membership
 from .forms import CommunityForm
@@ -46,6 +47,7 @@ def community_detail(request, pk):
 
 
 @login_required
+@require_POST
 def join_community(request, pk):
     community = get_object_or_404(Community, pk=pk)
     membership, created = Membership.objects.get_or_create(user=request.user, community=community)
@@ -57,6 +59,7 @@ def join_community(request, pk):
 
 
 @login_required
+@require_POST
 def leave_community(request, pk):
     community = get_object_or_404(Community, pk=pk)
     Membership.objects.filter(user=request.user, community=community).delete()

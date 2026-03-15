@@ -1,8 +1,10 @@
 from django.urls import path
 from django.shortcuts import redirect
+from django.contrib.auth.decorators import login_required
 from . import views
 
 
+@login_required
 def redirect_to_general(request, community_id):
     return redirect("chat_room", community_id=community_id, channel="general")
 

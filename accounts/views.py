@@ -5,7 +5,7 @@ from django.contrib import messages
 from django.db.models import Count, Q
 from django.utils import timezone
 from datetime import timedelta
-from .forms import SignUpForm, ProfileForm
+from .forms import SignUpForm, ProfileForm, OnboardingStep1Form, OnboardingStep2Form, OnboardingStep3Form
 from communities.models import Membership, Community
 from matchmaking.models import Match
 from helpboard.models import HelpRequest
@@ -21,11 +21,57 @@ def signup(request):
             user.last_name = form.cleaned_data.get("last_name", "")
             user.save()
             login(request, user)
-            messages.success(request, "Welcome to PeerWeave! Complete your profile to get started.")
-            return redirect("profile")
+            return redirect("onboarding_step1")
     else:
         form = SignUpForm()
     return render(request, "accounts/signup.html", {"form": form})
+
+
+# ── Cognitive Onboarding (3-step quiz) ───────────────────────────────
+
+@login_required
+def onboarding_step1(request):
+    profile = request.user.profile
+    if request.method == "POST":
+        form = OnboardingStep1Form(request.POST)
+        if form.is_valid():
+            profile.intent = form.cleaned_data["intent"]
+            profile.save(update_fields=["intent"])
+            return redirect("onboarding_step2")
+    else:
+        form = OnboardingStep1Form(initial={"intent": profile.intent})
+    return render(request, "accounts/onboarding/step1.html", {"form": form, "step": 1})
+
+
+@login_required
+def onboarding_step2(request):
+    profile = request.user.profile
+    if request.method == "POST":
+        form = OnboardingStep2Form(request.POST)
+        if form.is_valid():
+            profile.interests = ", ".join(form.cleaned_data["interests"])
+            profile.save(update_fields=["interests"])
+            return redirect("onboarding_step3")
+    else:
+        current = [i.strip() for i in profile.interests.split(",") if i.strip()]
+        form = OnboardingStep2Form(initial={"interests": current})
+    return render(request, "accounts/onboarding/step2.html", {"form": form, "step": 2})
+
+
+@login_required
+def onboarding_step3(request):
+    profile = request.user.profile
+    if request.method == "POST":
+        form = OnboardingStep3Form(request.POST)
+        if form.is_valid():
+            profile.communication_style = form.cleaned_data["communication_style"]
+            profile.onboarding_complete = True
+            profile.save(update_fields=["communication_style", "onboarding_complete"])
+            messages.success(request, "Onboarding complete! Welcome to PeerWeave.")
+            return redirect("dashboard")
+    else:
+        form = OnboardingStep3Form(initial={"communication_style": profile.communication_style})
+    return render(request, "accounts/onboarding/step3.html", {"form": form, "step": 3})
 
 
 @login_required

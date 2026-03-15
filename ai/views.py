@@ -31,7 +31,7 @@ def insights_page(request, community_id):
 def match_explain_api(request):
     """
     AJAX endpoint: explain why the current user and another user are a good match.
-    GET params: peer_id (required), community_id (optional, for display only)
+    GET params: peer_id (required)
     Returns JSON: {summary, collaboration, ice_breaker}
     """
     peer_id = request.GET.get("peer_id")
@@ -39,5 +39,12 @@ def match_explain_api(request):
         return JsonResponse({"error": "peer_id required"}, status=400)
 
     peer = get_object_or_404(User, pk=peer_id)
+
+    # Verify both users share at least one community
+    my_communities = set(Membership.objects.filter(user=request.user).values_list("community_id", flat=True))
+    peer_communities = set(Membership.objects.filter(user=peer).values_list("community_id", flat=True))
+    if not my_communities & peer_communities:
+        return JsonResponse({"error": "No shared community"}, status=403)
+
     result = services.explain_peer_match(request.user, peer)
     return JsonResponse(result)

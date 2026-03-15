@@ -1,0 +1,102 @@
+{% extends "base.html" %}
+{% block title %}Onboarding — Step 3{% endblock %}
+{% block content %}
+<div class="row justify-content-center">
+  <div class="col-md-5">
+    <!-- Progress -->
+    <div class="d-flex align-items-center gap-2 mb-4">
+      <div class="flex-grow-1" style="height:4px;border-radius:2px;background:var(--pw-primary);"></div>
+      <div class="flex-grow-1" style="height:4px;border-radius:2px;background:var(--pw-primary);"></div>
+      <div class="flex-grow-1" style="height:4px;border-radius:2px;background:var(--pw-primary);"></div>
+      <span class="text-muted small ms-2">3 / 3</span>
+    </div>
+
+    <h3 class="fw-bold mb-1" style="letter-spacing:-0.5px;">How do you communicate?</h3>
+    <p class="text-muted small mb-4">We'll match you with people who share your style.</p>
+
+    <form method="post" id="step3-form">
+      {% csrf_token %}
+      <div class="d-flex flex-column gap-2 mb-4" id="comm-options">
+        {% for radio in form.communication_style %}
+        <button type="button" class="onb-option-btn" data-value="{{ radio.data.value }}">
+          <span class="onb-icon">
+            {% if radio.data.value == "fast_discussion" %}
+              <i class="bi bi-lightning-charge"></i>
+            {% elif radio.data.value == "deep_analysis" %}
+              <i class="bi bi-search"></i>
+            {% elif radio.data.value == "casual_chat" %}
+              <i class="bi bi-chat-dots"></i>
+            {% endif %}
+          </span>
+          <span class="fw-semibold">{{ radio.choice_label }}</span>
+        </button>
+        {% endfor %}
+      </div>
+      <!-- Hidden real input -->
+      <input type="hidden" name="communication_style" id="comm-input" value="">
+      <div class="d-flex gap-2">
+        <a href="{% url 'onboarding_step2' %}" class="btn btn-outline-secondary flex-grow-1">Back</a>
+        <button type="submit" class="btn btn-pw flex-grow-1" id="finish-btn" disabled>Finish Setup</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<style>
+.onb-option-btn {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  border: 2px solid #e5e7eb;
+  border-radius: 12px;
+  background: #fff;
+  padding: 16px 20px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  text-align: left;
+  font-size: 0.95rem;
+}
+.onb-option-btn:hover {
+  border-color: var(--pw-primary);
+  background: #f8f9ff;
+}
+.onb-option-btn.selected {
+  border-color: var(--pw-primary);
+  background: #eef2ff;
+  box-shadow: 0 0 0 1px var(--pw-primary);
+}
+.onb-icon {
+  width: 40px;
+  height: 40px;
+  border-radius: 10px;
+  background: #f3f4f6;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.1rem;
+  color: var(--pw-primary);
+  flex-shrink: 0;
+}
+.onb-option-btn.selected .onb-icon {
+  background: var(--pw-primary);
+  color: #fff;
+}
+</style>
+
+<script>
+(function() {
+  const btns = document.querySelectorAll('#comm-options .onb-option-btn');
+  const hidden = document.getElementById('comm-input');
+  const submit = document.getElementById('finish-btn');
+  btns.forEach(btn => {
+    btn.addEventListener('click', () => {
+      btns.forEach(b => b.classList.remove('selected'));
+      btn.classList.add('selected');
+      hidden.value = btn.dataset.value;
+      submit.disabled = false;
+    });
+  });
+})();
+</script>
+{% endblock %}

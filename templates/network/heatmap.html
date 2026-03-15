@@ -1,0 +1,72 @@
+{% extends "base.html" %}
+{% block title %}Community Heatmap — PeerWeave{% endblock %}
+{% block content %}
+<div class="mb-5">
+  <h2 class="fw-bold mb-1" style="letter-spacing:-0.5px;">Community Heatmap</h2>
+  <p class="text-muted mb-0">Squad activity overview across your communities.</p>
+</div>
+
+{% for item in communities_data %}
+<div class="card mb-4">
+  <div class="card-header d-flex align-items-center justify-content-between">
+    <span class="fw-semibold"><i class="bi bi-people me-2"></i>{{ item.community.name }}</span>
+    <span class="text-muted small">{{ item.squads|length }} squad{{ item.squads|length|pluralize }}</span>
+  </div>
+  {% if item.squads %}
+  <div class="card-body p-0">
+    <div class="table-responsive">
+      <table class="table table-hover align-middle mb-0">
+        <thead class="table-light">
+          <tr>
+            <th class="ps-4">Squad</th>
+            <th>Members</th>
+            <th>Health</th>
+            <th>Last 24h</th>
+            <th>24–72h</th>
+            <th>Status</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for row in item.squads %}
+          <tr>
+            <td class="ps-4">
+              <a href="{% url 'squad_detail' row.squad.pk %}" class="text-decoration-none fw-semibold">
+                {{ row.squad.name }}
+              </a>
+            </td>
+            <td class="text-muted small">{{ row.squad.member_count }}/12</td>
+            <td>
+              <span class="badge rounded-pill
+                {% if row.squad.health_score >= 70 %}bg-success
+                {% elif row.squad.health_score >= 40 %}bg-warning text-dark
+                {% else %}bg-danger{% endif %}">{{ row.squad.health_score }}</span>
+            </td>
+            <td class="small">{{ row.interactions_24h }}</td>
+            <td class="small">{{ row.interactions_72h }}</td>
+            <td>
+              {% if row.status == 'green' %}
+              <span class="badge bg-success">Active</span>
+              {% elif row.status == 'yellow' %}
+              <span class="badge bg-warning text-dark">Low Activity</span>
+              {% else %}
+              <span class="badge bg-danger">No Activity 24h+</span>
+              {% endif %}
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+  {% else %}
+  <div class="card-body text-center text-muted py-4 small">
+    No squads yet. <a href="{% url 'run_clustering' item.community.pk %}">Auto-generate squads</a>
+  </div>
+  {% endif %}
+</div>
+{% empty %}
+<div class="card text-center p-5">
+  <p class="text-muted">Join a community to see its heatmap.</p>
+</div>
+{% endfor %}
+{% endblock %}

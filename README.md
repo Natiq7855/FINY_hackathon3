@@ -149,14 +149,6 @@ Open **http://127.0.0.1:8000** in your browser.
 
 The API key is configured in `peerweave/settings.py`:
 
-```python
-GEMINI_API_KEY = "your-api-key-here"
-```
-
-To get an API key, visit [Google AI Studio](https://aistudio.google.com/apikey).
-
----
-
 ## License
 
-This project was built for a hackathon. All rights reserved.
+This project was built for a hackathon.

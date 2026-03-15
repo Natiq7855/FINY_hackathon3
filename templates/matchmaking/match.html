@@ -13,11 +13,11 @@
     <div class="card">
       <div class="card-header"><i class="bi bi-intersect me-2 text-primary"></i>Find a Peer</div>
       <div class="card-body">
-        <form method="post">
+        <form method="post" id="match-form">
           {% csrf_token %}
           <div class="mb-3">
             <label class="form-label fw-semibold small">Community</label>
-            <select name="community" class="form-select" required>
+            <select name="community" class="form-select" required id="community-select">
               <option value="">Select community…</option>
               {% for membership in memberships %}
               <option value="{{ membership.community.pk }}"
@@ -31,6 +31,11 @@
             <i class="bi bi-search me-2"></i>Find Peer
           </button>
         </form>
+        <script>
+          document.getElementById("community-select").addEventListener("change", function() {
+            if (this.value) window.location.href = "?community=" + this.value;
+          });
+        </script>
       </div>
     </div>
 
@@ -125,6 +130,63 @@
           </div>
         </div>
         {% endif %}
+      </div>
+    </div>
+    {% endif %}
+
+    <!-- Suggested Peers -->
+    {% if suggestions %}
+    <div class="card mb-4">
+      <div class="card-header"><i class="bi bi-people me-2 text-primary"></i>Suggested Peers</div>
+      <div class="card-body p-0">
+        <ul class="list-group list-group-flush">
+          {% for s in suggestions %}
+          <li class="list-group-item px-4 py-3">
+            <div class="d-flex align-items-start justify-content-between">
+              <div class="flex-grow-1">
+                <div class="d-flex align-items-center gap-2 mb-1">
+                  <span class="fw-semibold">{{ s.user.get_full_name|default:s.user.username }}</span>
+                  <span class="text-muted small">@{{ s.user.username }}</span>
+                  <span class="badge px-2 py-1" style="background:#eef2ff;color:var(--pw-primary);font-size:0.75rem;">
+                    {{ s.compatibility }}% match
+                  </span>
+                  {% if s.already_matched %}
+                  <span class="badge bg-secondary" style="font-size:0.7rem;">matched</span>
+                  {% endif %}
+                </div>
+                {% if s.shared_interests %}
+                <div class="mb-1">
+                  <span class="text-muted" style="font-size:0.7rem;">Shared interests:</span>
+                  {% for i in s.shared_interests %}
+                  <span class="badge bg-success bg-opacity-10 text-success border border-success border-opacity-25" style="font-size:0.7rem;">{{ i }}</span>
+                  {% endfor %}
+                </div>
+                {% endif %}
+                {% if s.shared_skills %}
+                <div>
+                  <span class="text-muted" style="font-size:0.7rem;">Shared skills:</span>
+                  {% for sk in s.shared_skills %}
+                  <span class="badge bg-primary bg-opacity-10 text-primary border border-primary border-opacity-25" style="font-size:0.7rem;">{{ sk }}</span>
+                  {% endfor %}
+                </div>
+                {% endif %}
+                {% if not s.shared_interests and not s.shared_skills %}
+                <span class="text-muted" style="font-size:0.75rem;">No overlapping interests or skills</span>
+                {% endif %}
+              </div>
+              {% if not s.already_matched %}
+              <form method="post" class="flex-shrink-0 ms-3">
+                {% csrf_token %}
+                <input type="hidden" name="community" value="{{ selected_community.pk }}">
+                <button type="submit" class="btn btn-sm btn-pw">
+                  <i class="bi bi-intersect me-1"></i>Match
+                </button>
+              </form>
+              {% endif %}
+            </div>
+          </li>
+          {% endfor %}
+        </ul>
       </div>
     </div>
     {% endif %}

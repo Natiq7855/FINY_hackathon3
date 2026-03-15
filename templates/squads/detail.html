@@ -1,0 +1,95 @@
+{% extends "base.html" %}
+{% block title %}{{ squad.name }} — PeerWeave{% endblock %}
+{% block content %}
+
+<div class="d-flex align-items-start justify-content-between mb-4 flex-wrap gap-2">
+  <div>
+    <h2 class="fw-bold mb-1" style="letter-spacing:-0.5px;">{{ squad.name }}</h2>
+    <p class="text-muted mb-0">{{ squad.community.name }}</p>
+  </div>
+  <div class="d-flex align-items-center gap-3">
+    <span class="badge rounded-pill px-3 py-2 fs-6
+      {% if squad.health_score >= 70 %}bg-success
+      {% elif squad.health_score >= 40 %}bg-warning text-dark
+      {% else %}bg-danger{% endif %}">Health {{ squad.health_score }}</span>
+    <a href="{% url 'squad_list' %}" class="btn btn-outline-secondary">
+      <i class="bi bi-arrow-left me-2"></i>All Squads
+    </a>
+  </div>
+</div>
+
+<div class="row g-4">
+  <!-- Members -->
+  <div class="col-md-5">
+    <div class="card">
+      <div class="card-header">
+        <i class="bi bi-people me-2 text-primary"></i>Members ({{ squad.member_count }}/12)
+      </div>
+      <div class="card-body p-0">
+        <ul class="list-group list-group-flush">
+          {% for member in members %}
+          <li class="list-group-item d-flex align-items-center gap-2 px-4 py-3">
+            <span style="font-size:1.2rem;">👤</span>
+            <div class="flex-grow-1">
+              <span class="fw-semibold small">{{ member.get_full_name|default:member.username }}</span>
+              <span class="text-muted small ms-1">@{{ member.username }}</span>
+            </div>
+            <div>
+              {% for skill in member.profile.skills_list|slice:":2" %}
+              <span class="badge bg-light text-dark border">{{ skill }}</span>
+              {% endfor %}
+            </div>
+          </li>
+          {% endfor %}
+        </ul>
+      </div>
+    </div>
+
+    <!-- Topics -->
+    <div class="card mt-3">
+      <div class="card-header"><i class="bi bi-tags me-2 text-muted"></i>Topic Focus</div>
+      <div class="card-body">
+        <div class="d-flex flex-wrap gap-2">
+          {% for topic in squad.topic_focus %}
+          <span class="badge bg-primary px-3 py-2">{{ topic }}</span>
+          {% empty %}
+          <span class="text-muted small">No topics set</span>
+          {% endfor %}
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- AI Agent Actions / Activity Feed -->
+  <div class="col-md-7">
+    <div class="card">
+      <div class="card-header">
+        <i class="bi bi-cpu me-2 text-muted"></i>Shadow Founder Activity
+      </div>
+      <div class="card-body p-0">
+        {% if agent_actions %}
+        <ul class="list-group list-group-flush">
+          {% for action in agent_actions %}
+          <li class="list-group-item px-4 py-3">
+            <div class="d-flex align-items-start gap-2">
+              <span class="badge bg-primary mt-1 flex-shrink-0">AI</span>
+              <div>
+                <p class="mb-1 small">{{ action.payload.message }}</p>
+                <span class="text-muted" style="font-size:0.75rem;">
+                  {{ action.executed_at|timesince }} ago &middot; {{ action.action_type }}
+                </span>
+              </div>
+            </div>
+          </li>
+          {% endfor %}
+        </ul>
+        {% else %}
+        <div class="p-4 text-center text-muted small">
+          No AI interventions yet — squad is healthy!
+        </div>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

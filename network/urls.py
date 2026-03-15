@@ -4,4 +4,5 @@ from . import views
 urlpatterns = [
     path("", views.network_page, name="network"),
     path("data/<int:community_id>/", views.graph_data, name="graph_data"),
+    path("heatmap/", views.community_heatmap, name="community_heatmap"),
 ]

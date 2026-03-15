@@ -26,6 +26,15 @@
     <a href="{% url 'network' %}?community={{ community.pk }}" class="btn btn-outline-secondary">
       <i class="bi bi-diagram-3 me-2"></i>Network
     </a>
+    <form method="post" action="{% url 'run_clustering' community.pk %}" class="d-inline">
+      {% csrf_token %}
+      <button type="submit" class="btn btn-outline-secondary">
+        <i class="bi bi-bullseye me-2"></i>Auto Squads
+      </button>
+    </form>
+    <a href="{% url 'community_heatmap' %}" class="btn btn-outline-secondary">
+      <i class="bi bi-grid-3x3-gap me-2"></i>Heatmap
+    </a>
     {% if community.owner != user %}
     <form method="post" action="{% url 'leave_community' community.pk %}">
       {% csrf_token %}

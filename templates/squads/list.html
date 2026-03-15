@@ -1,0 +1,47 @@
+{% extends "base.html" %}
+{% block title %}My Squads — PeerWeave{% endblock %}
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-5">
+  <div>
+    <h2 class="fw-bold mb-0" style="letter-spacing:-0.5px;">My Squads</h2>
+    <p class="text-muted mb-0 mt-1">Your micro-communities for focused collaboration.</p>
+  </div>
+</div>
+
+<div class="row g-3">
+  {% for squad in squads %}
+  <div class="col-md-4">
+    <div class="card h-100">
+      <div class="card-body d-flex flex-column">
+        <div class="d-flex align-items-start justify-content-between mb-2">
+          <h6 class="fw-semibold mb-0">{{ squad.name }}</h6>
+          <span class="badge rounded-pill
+            {% if squad.health_score >= 70 %}bg-success
+            {% elif squad.health_score >= 40 %}bg-warning text-dark
+            {% else %}bg-danger{% endif %} flex-shrink-0">{{ squad.health_score }}</span>
+        </div>
+        <p class="text-muted small mb-2">{{ squad.community.name }}</p>
+        <div class="d-flex flex-wrap gap-1 mb-3 flex-grow-1">
+          {% for topic in squad.topic_focus %}
+          <span class="badge bg-light text-dark border">{{ topic }}</span>
+          {% endfor %}
+        </div>
+        <div class="d-flex align-items-center justify-content-between">
+          <span class="text-muted small"><i class="bi bi-people me-1"></i>{{ squad.member_count }}/12</span>
+          <a href="{% url 'squad_detail' squad.pk %}" class="btn btn-sm btn-outline-secondary">View</a>
+        </div>
+      </div>
+    </div>
+  </div>
+  {% empty %}
+  <div class="col-12">
+    <div class="card text-center p-5">
+      <div style="font-size:2.5rem;" class="mb-3">🎯</div>
+      <h6 class="fw-semibold">No squads yet</h6>
+      <p class="text-muted small mb-3">Join a community and squads will be auto-generated.</p>
+      <div><a href="{% url 'community_list' %}" class="btn btn-pw">Browse Communities</a></div>
+    </div>
+  </div>
+  {% endfor %}
+</div>
+{% endblock %}

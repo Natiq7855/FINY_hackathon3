@@ -2,6 +2,85 @@ from django.db.models import Q
 from .models import Match, Connection, Interaction, BuddyAssignment
 
 
+# ── Compatibility Scoring Engine ─────────────────────────────────────
+
+def compute_compatibility_score(user, candidate) -> float:
+    """
+    Enhanced compatibility score for squad placement and matching.
+    score = 0.5 * interest_overlap + 0.3 * intent_match + 0.2 * comm_style
+    Returns a float between 0.0 and 1.0.
+    """
+    try:
+        p1 = user.profile
+        p2 = candidate.profile
+    except Exception:
+        return 0.0
+
+    # Interest overlap (Jaccard)
+    i1 = set(p1.interests_list())
+    i2 = set(p2.interests_list())
+    if i1 or i2:
+        interest_overlap = len(i1 & i2) / len(i1 | i2) if (i1 | i2) else 0.0
+    else:
+        interest_overlap = 0.0
+
+    # Intent match (binary)
+    intent_match = 1.0 if (p1.intent and p1.intent == p2.intent) else 0.0
+
+    # Communication style (binary)
+    comm_match = 1.0 if (p1.communication_style and p1.communication_style == p2.communication_style) else 0.0
+
+    return 0.5 * interest_overlap + 0.3 * intent_match + 0.2 * comm_match
+
+
+SQUAD_COMPATIBILITY_THRESHOLD = 0.35
+
+
+def place_in_squad(user, community):
+    """
+    Try to place user into existing squad with highest compatibility.
+    If no squad score > threshold, create a new squad.
+    Returns the Squad the user was placed in.
+    """
+    from squads.models import Squad
+
+    active_squads = Squad.objects.filter(community=community, is_active=True)
+    best_squad = None
+    best_avg_score = -1.0
+
+    for squad in active_squads:
+        if squad.is_full():
+            continue
+        members = squad.members.all()
+        if not members:
+            continue
+        total = sum(compute_compatibility_score(user, m) for m in members)
+        avg = total / members.count()
+        if avg > best_avg_score:
+            best_avg_score = avg
+            best_squad = squad
+
+    if best_squad and best_avg_score >= SQUAD_COMPATIBILITY_THRESHOLD:
+        best_squad.add_member(user)
+        return best_squad
+
+    # No compatible squad — create new one
+    try:
+        interests = user.profile.interests_list()[:3]
+    except Exception:
+        interests = []
+    name = " & ".join(t.title() for t in interests) if interests else f"{user.username}'s Squad"
+    new_squad = Squad.objects.create(
+        community=community,
+        name=name,
+        topic_focus=interests,
+    )
+    new_squad.members.add(user)
+    return new_squad
+
+
+# ── Original Match Scoring (kept for backwards compat) ───────────────
+
 def compute_match_score(user, candidate, community=None):
     """
     Score = shared_interests*2 + shared_skills*1 + timezone_match*1
